@@ -3,6 +3,10 @@ import json
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+from django.utils.timezone import localtime
+
+from .models import PokemonEntity, Pokemon
+
 
 
 MOSCOW_CENTER = [55.751244, 37.618423]
@@ -27,25 +31,28 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 
 
 def show_all_pokemons(request):
-    with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
-        pokemons = json.load(database)['pokemons']
-
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon in pokemons:
-        for pokemon_entity in pokemon['entities']:
-            add_pokemon(
-                folium_map, pokemon_entity['lat'],
-                pokemon_entity['lon'],
-                pokemon['img_url']
-            )
 
     pokemons_on_page = []
+    pokemons = Pokemon.objects.all()
+    time_now = localtime().now()
     for pokemon in pokemons:
+        pokemon_photo = get_pokemon_photo(request, pokemon)
         pokemons_on_page.append({
-            'pokemon_id': pokemon['pokemon_id'],
-            'img_url': pokemon['img_url'],
-            'title_ru': pokemon['title_ru'],
+            'pokemon_id': pokemon.id,
+            'img_url': pokemon_photo,
+            'title_ru': pokemon.title,
         })
+
+    pokemons_entity = PokemonEntity.objects.filter(appeared_at__lt=time_now, dissapeared_at__gt=time_now)
+    for pokemon_entity in pokemons_entity:
+        pokemon_photo = get_pokemon_photo(request, pokemon_entity.pokemon)
+        add_pokemon(
+            folium_map,
+            pokemon_entity.lat,
+            pokemon_entity.lon,
+            pokemon_photo,
+        )
 
     return render(request, 'mainpage.html', context={
         'map': folium_map._repr_html_(),
@@ -75,3 +82,7 @@ def show_pokemon(request, pokemon_id):
     return render(request, 'pokemon.html', context={
         'map': folium_map._repr_html_(), 'pokemon': pokemon
     })
+
+
+def get_pokemon_photo(request, pokemon):
+    return request.build_absolute_uri(pokemon.image.url) if pokemon.image else DEFAULT_IMAGE_URL
