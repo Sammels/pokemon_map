@@ -35,7 +35,6 @@ def show_all_pokemons(request):
 
     pokemons_on_page = []
     pokemons = Pokemon.objects.all()
-    time_now = localtime().now()
     for pokemon in pokemons:
         pokemon_image = get_pokemon_photo(request, pokemon)
         pokemons_on_page.append({
@@ -43,7 +42,7 @@ def show_all_pokemons(request):
             'img_url': pokemon_image,
             'title_ru': pokemon.title,
         })
-
+    time_now = localtime().now()
     pokemons_entity = PokemonEntity.objects.filter(appeared_at__lt=time_now, disappeared_at__gt=time_now)
     for pokemon_entity in pokemons_entity:
         pokemon_image = get_pokemon_photo(request, pokemon_entity.pokemon)

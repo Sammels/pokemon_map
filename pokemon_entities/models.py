@@ -1,6 +1,6 @@
 from django.db import models  # noqa F401
 
-# your models here
+
 class Pokemon(models.Model):
     """Make Pokemon ID card"""
     title = models.CharField(max_length=200)
@@ -17,7 +17,7 @@ class Pokemon(models.Model):
         verbose_name_plural = 'Покемоны'
 
     def __str__(self):
-        return f"{self.title}"
+        return self.title
 
 
 class PokemonEntity(models.Model):
@@ -38,6 +38,6 @@ class PokemonEntity(models.Model):
         verbose_name_plural = 'Сущности покемонов'
 
     def __str__(self):
-        return f"{self.pokemon.title}"
+        return self.pokemon.title
 
 
